@@ -127,7 +127,9 @@ class ThinSlider(Widget, can_focus=True):
     """
     # The current position value between self.min and self.max.
     value: reactive[int] = reactive(0, init=False)
-    # The relative position of the slider in a virtual range of 0.0 to 100.0
+    # The percent the value is between the min and max range values
+    percent: float = 0.0
+    # The position of the slider in a virtual range of 0.0 to 100.0
     _virtual_pos: reactive[float] = reactive(0.0)
     # Mouse capture and movement values
     _grabbed: var[Offset | None] = var[Optional[Offset]](None)
@@ -188,6 +190,8 @@ class ThinSlider(Widget, can_focus=True):
     def watch_value(self) -> None:
         if not self._grabbed:
             self._virtual_pos = ((self.value - self.min) / (self.total_steps / 100)) / self.step
+        pct = (self.value / (self.max - self.min)) * 100
+        self.percent = clamp(pct, 0.0, 100.0)
         self.post_message(self.Changed(self, self.value))
 
     def render(self) -> RenderableType:
