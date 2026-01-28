@@ -4,9 +4,9 @@
 #
 #    pip-compile
 #
-build==1.4.0
+build>=1.2.2
     # via -r requirements.in
-coverage==7.13.2
+coverage>=7.10.0
     # via -r requirements.in
 iniconfig==2.3.0
     # via pytest

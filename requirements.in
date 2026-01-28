@@ -4,6 +4,6 @@
 textual
 
 # Development, build or testing libraries
-build
+build>=1.2.2
 pytest
-coverage
+coverage>=7.10.0
