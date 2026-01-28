@@ -35,7 +35,8 @@ keywords = [
     "terminal",
     "widget",
     "slider",
-    "ui"
+    "ui",
+    "control"
 ]
 
 [project.urls]
@@ -43,3 +44,12 @@ Homepage = "https://github.com/robabram/textual-thin-slider"
 Repository = "https://github.com/robabram/textual-thin-slider"
 Changelog = "https://github.com/robabram/textual-thin-slider"
 Issues = "https://github.com/robabram/textual-thin-slider/issues"
+
+
+# PyTest configuration
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]

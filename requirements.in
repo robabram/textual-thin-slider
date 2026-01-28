@@ -1,2 +1,9 @@
 # Pip-Tools requirements.in file
+
+# Required libraries
 textual
+
+# Development, build or testing libraries
+build
+pytest
+coverage
