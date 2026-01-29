@@ -19,13 +19,12 @@ from textual.reactive import reactive, var
 from textual.widget import Widget
 
 
-class ThinSliderDisplayTypeEnum(IntEnum):
-    """ How should we show values with the slider bar """
-    no_value_display = 0
-    pct_display_left = 1
-    pct_display_right = 2
-    position_display_left = 3
-    position_display_right = 4
+class ThinSliderDisplayOptions(IntEnum):
+    """ How should we show values with the slider bar, use bitwise and/or to set/read values. """
+    none = 0
+    display_left = 1
+    display_right = 2
+    show_value = 4
 
 
 class ThinSliderRender:
@@ -33,43 +32,44 @@ class ThinSliderRender:
     SOLID_GLYPH: ClassVar[str] = "█"
     BLANK_GLYPH: ClassVar[str] = " "
 
-    def __init__(self, range_min: int = 0, range_max: int = 100, position: int = 0,
-                 display_type: ThinSliderDisplayTypeEnum = ThinSliderDisplayTypeEnum.no_value_display) -> None:
+    def __init__(self, range_min: int = 0, range_max: int = 100, value: int = 0,
+                 display_type: ThinSliderDisplayOptions = ThinSliderDisplayOptions.none) -> None:
         self.range_min = range_min
         self.range_max = range_max
-        self.position = position
+        self.value = value
         self.display_type = display_type
 
     @classmethod
-    def render_bar(cls, range_min: int, range_max: int, size: int, position: int,
-                   display_type: ThinSliderDisplayTypeEnum) -> str:
+    def render_bar(cls, range_min: int, range_max: int, size: int, value: int,
+                   display_type: ThinSliderDisplayOptions) -> str:
         """
         Draw the Thin Slider bar
         :param range_min: Minimum range value of the bar
         :param range_max: Maximum range value of the bar
         :param size: The widget window horizontal size
-        :param position: The current slider position, between min and max
+        :param value: The current slider position, between min and max
         :param display_type: ThinSliderValueDisplayEnum value
         :return:
         """
         _, display_left = divmod(display_type, 2)
-        position = min(max(range_min, position), range_max)
-        display_value = ''
-        if display_type in (ThinSliderDisplayTypeEnum.pct_display_left,
-                            ThinSliderDisplayTypeEnum.pct_display_right):
-            if (position - range_min) == range_max:
-                display_value = '100%'
+        value = min(max(range_min, value), range_max)
+
+        if display_type == ThinSliderDisplayOptions.none:
+            display_value = ''
+        else:
+            if display_type & ThinSliderDisplayOptions.show_value:
+                display_value = str(value).rjust(len(str(range_max)), cls.BLANK_GLYPH)
             else:
-                display_value = f'{round((position - range_min) / (range_max - range_min) * 100):3}%'
-        elif display_type in (ThinSliderDisplayTypeEnum.position_display_left,
-                              ThinSliderDisplayTypeEnum.position_display_right):
-            display_value = str(position).rjust(len(str(range_max)), cls.BLANK_GLYPH)
+                if (value - range_min) == range_max:
+                    display_value = '100%'
+                else:
+                    display_value = f'{round((value - range_min) / (range_max - range_min) * 100):3}%'
 
         bar_size = (size - len(display_value)) - 2
         glyph_len = len(cls.PARTIAL_GLYPHS)
 
         step_size = (range_max - range_min) / bar_size
-        sel_len = max(0, int((position - range_min) / step_size))
+        sel_len = max(0, int((value - range_min) / step_size))
 
         # Build an empty bar array and then fill as needed, arrays are mutable and fast.
         bar = [cls.BLANK_GLYPH] * bar_size
@@ -77,12 +77,17 @@ class ThinSliderRender:
             if i < sel_len:
                 bar[i] = cls.SOLID_GLYPH
             elif i == sel_len:
-                glyph_fill_pct = (float(((position - range_min) - (i * step_size)) / step_size))
+                glyph_fill_pct = (float(((value - range_min) - (i * step_size)) / step_size))
                 glyph_bar_idx = min(max(0, round(glyph_len * glyph_fill_pct)), glyph_len - 1)
                 bar[i] = cls.PARTIAL_GLYPHS[(glyph_len - 1) - glyph_bar_idx]
             else:
                 break
-        return f'{display_value}[{"".join(bar)}]' if display_left else f'[{"".join(bar)}]{display_value}'
+
+        if display_type == ThinSliderDisplayOptions.none:
+            return f'[{"".join(bar)}]'
+        elif display_type & ThinSliderDisplayOptions.display_left:
+            return f'{display_value}[{"".join(bar)}]'
+        return f'[{"".join(bar)}]{display_value}'
 
     def __rich_console__(self, console: Console, options: ConsoleOptions) -> RenderResult:
         size = (options.max_width or console.width)
@@ -90,7 +95,7 @@ class ThinSliderRender:
             range_min=self.range_min,
             range_max=self.range_max,
             size=size,
-            position=self.position,
+            value=self.value,
             display_type=self.display_type
         )
         yield bar
@@ -138,7 +143,7 @@ class ThinSlider(Widget, can_focus=True):
     class Changed(Message):
         """
         Event message is created when the value of the slider changes.
-        Define a `on_slider_changed()` method to catch the event.
+        Define a `on_thin_slider_changed()` method to catch the event.
         """
         def __init__(self, slider: ThinSlider, value: int) -> None:
             super().__init__()
@@ -150,7 +155,7 @@ class ThinSlider(Widget, can_focus=True):
             return self.slider
 
     def __init__(self, range_min: int, range_max: int,
-                 display_type: ThinSliderDisplayTypeEnum = ThinSliderDisplayTypeEnum.no_value_display, step: int = 1,
+                 display_type: ThinSliderDisplayOptions = ThinSliderDisplayOptions.none, step: int = 1,
                  value: int | None = None, name: str | None = None, id: str | None = None, classes: str | None = None,
                  disabled: bool = False) -> None:
         """
@@ -167,12 +172,14 @@ class ThinSlider(Widget, can_focus=True):
         self.value = value if value is not None else range_min
         self.display_type = display_type
 
-        if display_type in (ThinSliderDisplayTypeEnum.pct_display_left, ThinSliderDisplayTypeEnum.pct_display_right):
-            self.display_value_len = 4
-        elif display_type in (ThinSliderDisplayTypeEnum.position_display_left, ThinSliderDisplayTypeEnum.position_display_right):
+        if display_type == ThinSliderDisplayOptions.none:
+            self.display_value_len = 0
+        elif display_type & ThinSliderDisplayOptions.show_value:
+            # Position value will be displayed
             self.display_value_len = len(str(range_max))
         else:
-            self.display_value_len = 0
+            # Percentage will be displayed
+            self.display_value_len = 4
 
         self._virtual_pos = ((self.value - self.min) / (self.total_steps / 100)) / self.step
 
@@ -182,10 +189,6 @@ class ThinSlider(Widget, can_focus=True):
 
     def validate_value(self, value: int) -> int:
         return clamp(value, self.min, self.max)
-
-    # def validate__slider_position(self, slider_position: float) -> float:
-    #     max_pos = ((self.max - self.min) / (self.total_steps / 100) ) / self.step
-    #     return clamp(slider_position, 0, max_pos)
 
     def watch_value(self) -> None:
         if not self._grabbed:
@@ -199,7 +202,7 @@ class ThinSlider(Widget, can_focus=True):
         return self.renderer(
             range_min=self.min,
             range_max=self.max,
-            position=self.value,
+            value=self.value,
             display_type=self.display_type
         )
 
