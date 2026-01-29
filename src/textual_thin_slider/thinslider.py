@@ -183,9 +183,9 @@ class ThinSlider(Widget, can_focus=True):
     def validate_value(self, value: int) -> int:
         return clamp(value, self.min, self.max)
 
-    def validate__slider_position(self, slider_position: float) -> float:
-        max_pos = ((self.max - self.min) / (self.total_steps / 100) ) / self.step
-        return clamp(slider_position, 0, max_pos)
+    # def validate__slider_position(self, slider_position: float) -> float:
+    #     max_pos = ((self.max - self.min) / (self.total_steps / 100) ) / self.step
+    #     return clamp(slider_position, 0, max_pos)
 
     def watch_value(self) -> None:
         if not self._grabbed:
