@@ -2,7 +2,7 @@
 ![Coverage Status](https://raw.githubusercontent.com/robabram/textual-thin-slider/refs/heads/coverage-badge/coverage.svg?raw=true)
 ![Supported Python Versions](https://img.shields.io/badge/python-v3.8%20|%20v3.9%20|%20v3.10%20|%20v3.11%20|%20v3.12%20|%20v3.13%20|%20v3.14-blue)
 ![is support](https://img.shields.io/badge/OS-Linux%20|%20MacOS%20|%20Windows-red)
-![AI Code](https://img.shields.io/badge/AI-0%-purple)
+![AI Code Pct](https://img.shields.io/badge/AI-0%25-purple)
 
 # Textual Thin Slider
 A thin slider widgit for the Textual UI platform. The this slider widgit is only 1 character tall and allows 
