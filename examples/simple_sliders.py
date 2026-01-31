@@ -3,16 +3,24 @@
 # file 'LICENSE', which is part of this source code package.
 #
 from textual.app import ComposeResult, App
+from textual.containers import Grid
 from textual.widgets import Header, Footer
 
 from src.textual_thin_slider.thinslider import ThinSlider, ThinSliderDisplayOptions
 
 
-class SimpleSliderApp(App):
+class SimpleSliderGrid(Grid):
+
+    DEFAULT_CSS = """
+        SimpleSliderGrid {
+            width: 70;
+            height: 15;
+            padding: 2 4;
+            hatch: cross #aaaaaa 20%;
+        }
+        """
 
     def compose(self) -> ComposeResult:
-        yield Header()
-        yield Footer()
         # Show a slider only with no value display
         yield ThinSlider(range_min=0, range_max=1500, value=600, display_type=ThinSliderDisplayOptions.none)
         # Show a slider with a percentage shown on the left side
@@ -25,6 +33,16 @@ class SimpleSliderApp(App):
         # Show a slider with the selected value shown on the right side
         yield ThinSlider(range_min=0, range_max=1500, step=3,
                          display_type=ThinSliderDisplayOptions.display_right | ThinSliderDisplayOptions.show_value)
+
+
+class SimpleSliderApp(App):
+
+    TITLE = "Slider Example"
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        yield Footer()
+        yield SimpleSliderGrid()
 
 
 if __name__ == "__main__":
