@@ -115,3 +115,4 @@ async def test_slider_message_events():
         assert app.event is not None
         control = app.event.control
         assert control is not None
+        assert control.percent > 0.0
