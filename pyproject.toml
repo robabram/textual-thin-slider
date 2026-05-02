@@ -11,7 +11,9 @@ description = "A thin slider control widget for the Textual UI platform"
 authors = [
     { name = "Robert Abram", email = "rabram991@gmail.com" },
 ]
-dependencies = ["textual", ]
+dependencies = [
+    "textual",
+]
 readme = "README.md"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -37,6 +39,14 @@ keywords = [
     "slider",
     "ui",
     "control"
+]
+
+[project.optional-dependencies]
+dev = [
+    "build",
+    "pytest",
+    "pytest-asyncio",
+    "coverage",
 ]
 
 [project.urls]

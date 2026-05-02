@@ -32,12 +32,22 @@ class ThinSliderRender:
     SOLID_GLYPH: ClassVar[str] = "█"
     BLANK_GLYPH: ClassVar[str] = " "
 
+    range_min: int = 0
+    range_max: int = 0
+    value: int = 0
+    display_type: ThinSliderDisplayOptions = ThinSliderDisplayOptions.none
+
     def __init__(self, range_min: int = 0, range_max: int = 100, value: int = 0,
                  display_type: ThinSliderDisplayOptions = ThinSliderDisplayOptions.none) -> None:
         self.range_min = range_min
         self.range_max = range_max
         self.value = value
         self.display_type = display_type
+
+    def update(self, value: int = None):
+        """ Update the slider position value and return self """
+        self.value = value or self.value
+        return self
 
     @classmethod
     def render_bar(cls, range_min: int, range_max: int, size: int, value: int,
@@ -105,7 +115,8 @@ class ThinSlider(Widget, can_focus=True):
     """
     A Textual thin slider control widget.
     """
-    renderer: ClassVar[Type[ThinSliderRender]] = ThinSliderRender
+    renderer_cls: ClassVar[Type[ThinSliderRender]] = ThinSliderRender
+    renderer: ThinSliderRender
     # Prevent user from selecting text within the widget
     ALLOW_SELECT = False
 
@@ -121,7 +132,7 @@ class ThinSlider(Widget, can_focus=True):
         background: $surface;
         padding: 0 0;
 
-        color: $foreground 90%;
+        color: $foreground 80%;
 
         &:focus {
             # border: tall $border;
@@ -183,6 +194,13 @@ class ThinSlider(Widget, can_focus=True):
 
         self._virtual_pos = ((self.value - self.min) / (self.total_steps / 100)) / self.step
 
+        self.renderer = self.renderer_cls(
+            range_min=self.min,
+            range_max=self.max,
+            value=self.value,
+            display_type=self.display_type
+        )
+
     @property
     def total_steps(self) -> int:
         return int((self.max - self.min) / self.step) + 1
@@ -204,12 +222,7 @@ class ThinSlider(Widget, can_focus=True):
 
     def render(self) -> RenderableType:
         """ Render the slider bar """
-        return self.renderer(
-            range_min=self.min,
-            range_max=self.max,
-            value=self.value,
-            display_type=self.display_type
-        )
+        return self.renderer.update(self.value)
 
     def _calc_bar_min_max_positions(self, display_left: int, width: int) -> tuple[int, int]:
         """
